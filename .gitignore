@@ -1,0 +1,4 @@
+test*
+.env
+secret.env
+main.go
