@@ -1,1 +1,1 @@
-# go-file
+# gofast
