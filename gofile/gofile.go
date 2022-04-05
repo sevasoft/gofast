@@ -25,7 +25,7 @@ func GetName(_path string) string {
 func IsExist(_path string) bool {
 	file, err := GetInfo(_path)
 
-	if err == nil {
+	if err == nil && os.IsExist(err) {
 		name := file.Name()
 		log.Printf("File %s already exists.\n", name)
 
@@ -38,22 +38,37 @@ func IsExist(_path string) bool {
 	return false
 }
 
-func Create(_path string) error {
-	if IsExist(_path) == false {
-		log.Println("Creating new file ...")
-
+func Create(_path string, _overwrite bool) error {
+	if _overwrite == true {
+		log.Println("Creating/overwriting file ...")
 		_, err := os.Create(_path)
 
 		if err != nil {
-			log.Println("X-X-X File is not created X-X-X", err.Error())
+			log.Printf("X-X-X File is not created X-X-X %s\n%s\n", _path, err.Error())
 		} else {
-			name := GetName(_path)
-			log.Printf("File %s is created.\n", name)
+			log.Printf("File %s is created.\n", GetName(_path))
 		}
+
 		return err
-	} else {
-		return nil
 	}
+
+	if _overwrite == false {
+		if IsExist(_path) == false {
+
+			log.Println("Creating new file ...")
+			_, err := os.Create(_path)
+
+			if err != nil {
+				log.Printf("X-X-X File is not created X-X-X %s\n%s\n", _path, err.Error())
+			} else {
+				log.Printf("File %s is created.\n", GetName(_path))
+			}
+
+			return err
+		}
+	}
+
+	return nil
 }
 
 func ReadString(_path string) string {
@@ -84,10 +99,10 @@ func ReadByte(_path string) ([]byte, error) {
    @param _data Data to write (ex: []byte("print('Hello World')"))
    @param _perm Unix file permission bits (ex: 0755)
 */
-func Write(_path string, _data []byte, _perm uint32) error {
+func Write(_path string, _data []byte, _perm uint32, _overwrite bool) error {
 	unixFilePermissionBits := fs.FileMode(_perm)
 
-	Create(_path) // creates if not exist.
+	Create(_path, _overwrite) // creates if not exist.
 
 	err := ioutil.WriteFile(_path, _data, unixFilePermissionBits)
 
@@ -111,14 +126,17 @@ func Rename(_oldPath string, _newPath string) {
 	log.Printf("Successfully renamed (moved) the file %s to %s\n", oldName, newName)
 }
 
-func Remove(_path string) {
-	name := GetName(_path)
+func RemoveAll(_path string) error {
+	log.Printf("Removing %s\n", _path)
+	err := os.RemoveAll(_path)
 
-	if err := os.Remove(_path); err != nil {
-		log.Fatalln("Error!", err.Error())
+	if err != nil {
+		log.Println("Error!", err.Error())
+	} else {
+		log.Printf("Successfully removed the file %s\n", _path)
 	}
 
-	log.Printf("Successfully removed the file %s\n", name)
+	return err
 }
 
 func GetExtension(_path string) string {
